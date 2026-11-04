@@ -22,7 +22,7 @@ Answers for `matrix_multiplication.ipynb`. The same text appears in `solved_note
 
 ## Answer (2.4.2)
 
-1. **Kernel launch and synchronization** dominate: each device call pays a roughly fixed overhead before any element is moved. For tiny matrices the actual transpose work is negligible, so naive and tiled kernels sit on the same launch floor and the time barely tracks `N`. CPU `Transpose!` avoids that launch cost and is often faster in this regime.
+1. **Kernel launch and synchronization** dominate: each device call pays a roughly fixed overhead before any element is moved. For tiny matrices the actual transpose work is negligible, so naive and tiled kernels sit on the same launch floor and the time barely tracks `N`. CPU `my_transpose_cpu!` avoids that launch cost and is often faster in this regime.
 2. Once `N` is large enough, work and memory traffic grow (roughly like `N²`) and the curves rise above the floor; the GPU’s parallelism then beats the single-threaded CPU loop. The tiled kernel loads a block into shared memory and writes coalesced output, while the naive kernel does strided global reads and writes—so bandwidth waste shrinks with tiling and the tiled curve grows more slowly; the gap widens as `N` increases.
 3. Small problems on the device still pay launch (and any setup) without enough parallel work to amortize it, so CPU `permutedims!` can win. For larger `N`, bulk data movement on the device favors the vendor library. At the largest sizes on the plot, a kernel tailored to this access pattern (shared-memory tile + coalesced write) can match or beat a generic `permutedims!` path because every global access is arranged for the transpose, not a general axis permutation.
 

@@ -123,3 +123,6 @@ source setenv-odo.sh
 
 Each instructor will provide content-specific steps after that.
 
+## AMD HPC & AI Cluster
+
+We thank Advanced Micro Devices for their generous contribution of compute resources for participants who cannot obtain access to Odo. Instructions to follow.

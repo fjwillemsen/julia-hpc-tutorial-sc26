@@ -1,6 +1,6 @@
 using Pkg
 
-Pkg.instantiate()
+Pkg.add("IJulia")
 
 using IJulia
 
@@ -9,4 +9,4 @@ IJulia.installkernel(
     "--project=@.",
     "--threads=auto",
 )
-notebook()
+notebook(dir=@__DIR__)
