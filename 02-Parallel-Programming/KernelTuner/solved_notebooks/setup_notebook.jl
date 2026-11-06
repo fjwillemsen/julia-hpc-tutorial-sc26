@@ -23,7 +23,12 @@ function is_system_dark_mode()
     end
 end
 
-dark_mode = is_system_dark_mode()
+# Check if the system is in dark mode if the user has not set the `dark_mode` variable themselves
+if !isdefined(Main, :dark_mode_override)
+    dark_mode = is_system_dark_mode()
+else
+    dark_mode = Main.dark_mode_override
+end
 
 # Load required packages
 using JSON
