@@ -149,9 +149,14 @@ function read_tuning_cache(cachefile::AbstractString)
     for line in eachsplit(text[(last(r)+1):end], '\n')
         m = match(r"^\"[^\"]*\":\s*(\{.*\}),?\s*$", line)
         isnothing(m) && continue
+        entry = m.captures[1]
         try
-            push!(configs, JSON.parse(m.captures[1]))
-        catch   # a half-written line, it will be complete on the next poll
+            push!(configs, JSON.parse(entry))
+        catch
+            try   # once tuning is done, the last line also closes the cache: `{...}}`
+                endswith(entry, "}}") && push!(configs, JSON.parse(chop(entry)))
+            catch   # a half-written line, it will be complete on the next poll
+            end
         end
     end
     return param_keys, configs
@@ -183,9 +188,49 @@ function plot_live_tuning_results(param_keys, configs; objective::String="time",
     return p
 end
 
+# Indices of the Pareto-optimal points: those for which no other point has both a lower `a` and a lower `b`, ordered by `a`.
+function pareto_front(a, b)
+    front, lowest_b = Int[], Inf
+    for i in sortperm(a)
+        if b[i] < lowest_b
+            push!(front, i)
+            lowest_b = b[i]
+        end
+    end
+    return front
+end
+
+# Live scatterplot of time versus energy of a running tuning session, read from Kernel Tuner's cache file.
+function plot_live_time_energy(param_keys, configs; energy_key::String="energy")
+    measured(c, k) = get(c, k, nothing) isa Real && isfinite(c[k]) && c[k] > 0
+    valid = findall(c -> measured(c, "time") && measured(c, energy_key), configs)   # failed configurations store an error string instead
+    t = Float64[configs[i]["time"] for i in valid]
+    e = Float64[configs[i][energy_key] for i in valid]
+    title = "$(length(configs)) configurations evaluated ($(length(configs) - length(valid)) failed)"
+    wide(v) = !isempty(v) && maximum(v) > 10 * minimum(v)   # log scale for wide ranges
+    p = scatter(t, e; label="configuration", markersize=5, markerstrokewidth=0.3, markerstrokecolor=:gray40, alpha=0.8,
+        marker_z=isempty(e) ? nothing : (wide(e) ? log10.(e) : e), color=reverse(cgrad(:RdYlGn)), colorbar=false,
+        xlabel="Time (ms), lower is better", ylabel="Energy (J), lower is better",
+        xscale=wide(t) ? :log10 : :identity, yscale=wide(e) ? :log10 : :identity,
+        size=(800, 600), left_margin=3Plots.mm, bottom_margin=3Plots.mm, legend=:topleft, dpi=200, titlefontsize=10)
+    if !isempty(t)
+        config_string(c) = join(["$k=$(c[k])" for k in param_keys], ", ")
+        fastest, lowest = argmin(t), argmin(e)
+        title *= "\nfastest: $(round(t[fastest], sigdigits=3)) ms, $(round(e[fastest], sigdigits=3)) J with $(config_string(configs[valid[fastest]]))"
+        title *= "\nlowest energy: $(round(t[lowest], sigdigits=3)) ms, $(round(e[lowest], sigdigits=3)) J with $(config_string(configs[valid[lowest]]))"
+        front = pareto_front(t, e)
+        plot!(p, t[front], e[front]; seriestype=:steppost, linewidth=2, color=:black, label="Pareto front")
+        scatter!(p, [t[fastest]], [e[fastest]]; marker=:star5, markersize=10, color=:dodgerblue, label="fastest")
+        scatter!(p, [t[lowest]], [e[lowest]]; marker=:diamond, markersize=8, color=:magenta, label="lowest energy")
+    end
+    plot!(p; title=title)
+    return p
+end
+
 # Runs `f` (the tuning) while a background thread polls `cachefile` and redraws the plot in place every `interval` seconds.
-function with_live_tuning_plot(f, cachefile::AbstractString; interval=0.5, kwargs...)
-    render() = plot_live_tuning_results(read_tuning_cache(cachefile)...; kwargs...)
+# `plotter` draws the plot from the cache contents, the other keyword arguments are passed on to it.
+function with_live_tuning_plot(f, cachefile::AbstractString; interval=0.5, plotter=plot_live_tuning_results, kwargs...)
+    render() = plotter(read_tuning_cache(cachefile)...; kwargs...)
     other_threads = Threads.nthreads(:default) - (Threads.threadpool() == :default ? 1 : 0)
     kernel = isdefined(Main, :IJulia) ? Main.IJulia._default_kernel : nothing
     if other_threads < 1 || isnothing(kernel)
