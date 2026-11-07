@@ -2,9 +2,18 @@
 
 using Pkg
 Pkg.activate(joinpath(@__DIR__))
+Pkg.add(["BenchmarkTools", "ProgressMeter", "Plots", "ColorTypes", "KernelAbstractions", "PythonCall", "JSON"])
 
-Pkg.add(["BenchmarkTools", "ProgressMeter", "Plots", "ColorTypes", "KernelAbstractions", "PythonCall", "JSON", String(DEV)])
-Pkg.develop(path="/Users/fjwillemsen/University/Research/Projects/Bayesian_Optimization_in_Kernel_Tuner/Code/KernelTuner.jl")
+gpu_model = String(DEV)
+if gpu_model == "NVIDIA"
+    Pkg.add(["CUDA"])
+elseif gpu_model == "AMD"
+    Pkg.add(["AMDGPU"])
+elseif gpu_model == "Metal"
+    Pkg.add(["Metal"])
+end
+
+Pkg.develop(path="../../../../KernelTuner.jl")
 
 function is_system_dark_mode()
     if Sys.isapple()
