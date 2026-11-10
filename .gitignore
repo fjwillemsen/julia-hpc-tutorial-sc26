@@ -43,3 +43,6 @@ index_files
 
 # Editor files
 .vscode
+
+# AMD HPC Fund files
+job.notebook

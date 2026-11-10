@@ -1,0 +1,62 @@
+#!/bin/bash
+
+#SBATCH -J notebook           # Job name
+#SBATCH -o job.%j.out         # Name of stdout output file (%j expands to jobId)
+#SBATCH -N 1                  # Total number of nodes requested
+#SBATCH -n 4                  # Number of tasks requested
+#SBATCH -t 02:00:00           # Run time (hh:mm:ss) - 2 hours
+#SBATCH -p mi2101x            # Desired partition
+
+# ---------------------------- Input ------------------------------
+# The following defines an available port to use on your local
+# laptop/workstation for tunnelling to the remote notebook.
+# It can generally be left as is unless the port is already in use.
+
+localhost_port=7080
+# -----------------------------------------------------------------
+
+
+# Setup default environment and load pytorch/jupyter
+module purge
+module load hpcfund
+python3 -m pip install --user notebook
+export PATH="$HOME/.local/bin:$PATH"
+
+# Setup secure tunnel on random port between login node and assigned compute
+login_port=""
+for port in `shuf -i 9000-10000 -n 15`; do
+    nc -z login1 ${port}
+    if [ $? -eq 1 ];then
+	login_port=${port}
+	break
+    fi
+done
+
+if [[ -z "${login_port}" ]];then
+    echo "Unable to ascertain free port for login node tunnel"
+    exit 1
+fi
+
+ssh -N -f -R ${login_port}:localhost:8888 login1
+
+
+# Hi
+echo " "
+echo "------"
+echo "Jupyter Notebook Setup:"
+echo " "
+echo "To access this notebook, use a separate terminal on your laptop/workstation to create"
+echo "an ssh tunnel to the login node as follows (replace username):"
+echo " "
+echo "ssh -t ${USER}@hpcfund.amd.com -L ${localhost_port}:localhost:${login_port}"
+echo " "
+echo "Then, point your local web browser to http://localhost:${localhost_port}/tree?token=<YOUR-TOKEN> to access"
+echo "the running notebook.  You will need to provide the notebook token shown below."
+echo "Do not use localhost 8888 shown below, replace this with ${localhost_port}."
+echo " "
+echo "Please remember to Quit Jupyter when done, or \"scancel\" your job in SLURM job when"
+echo "to avoid additional accounting charges."
+echo "-----"
+
+# Launch Jupyter notebook
+jupyter notebook --no-browser --port=8888
