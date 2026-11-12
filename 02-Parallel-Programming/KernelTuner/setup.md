@@ -2,7 +2,7 @@
 
 Steps for the parallel-programming notebooks with GPU setup: there are two options.
 
-## Local machine: if you have macbook
+## Local machine: if you have a MacBook or nvidia GPU
 
 1. Install [Julia](https://julialang.org/downloads/).
 2. Clone the repo and enter the KernelAbstractions project:
@@ -22,7 +22,7 @@ Steps for the parallel-programming notebooks with GPU setup: there are two optio
 
 
 
-## AMD HPC Cluster: if you do not have a macbook or NVIDIA GPU
+## AMD HPC Cluster: if you do not have a MacBook or NVIDIA GPU
 
 
 1. Open a terminal and connect to the cluster as follows:
@@ -40,6 +40,19 @@ git clone https://github.com/JuliaParallel/julia-hpc-tutorial-sc26.git
 cd julia-hpc-tutorial-sc26/02-Parallel-Programming/KernelAbstractions
  ```
 
+#### Automated
+
+For manual version see below. 
+
+3. Open Jupyter from the folder of step 2. (installs the **GPU Julia** IJulia kernel and starts the notebook server):
+
+   ```bash
+   julia --project=. open_notebook.jl
+   ```
+Follow the instructions printed to your terminal for connecting to the notebook.
+
+#### Manual
+For automated version see above. 
 
 3. Request a node with a jupyter notebook attached as follows (replace job-id), and look at its output: (If the out file does not exist, your job may be queued, check using `squeue --me`.) You will need to follow these steps for every new folder you are navigating too.
 
