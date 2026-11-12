@@ -1,24 +1,8 @@
-# HPC fundamentals — environment setup for 01 Intro to Julia
-
-## OLCF Odo (SC26 tutorial)
-
-Follow the [root README](README.md) for Odo account registration, then:
-
-```bash
-cd /gpfs/wolf2/olcf/trn047/scratch/$USER
-git clone https://github.com/JuliaParallel/julia-hpc-tutorial-sc26.git
-cd julia-hpc-tutorial-sc26
-source setenv-odo.sh
-```
-
-Log in to [Jupyter at OLCF](https://jupyter-open.olcf.ornl.gov/) and select the **`julia-hpc-sc26`** kernel.
-
-
-# HPC fundamentals — environment setup for 02 Parallel Programming
+# HPC fundamentals — environment setup for GPU computing
 
 Steps for the parallel-programming notebooks with GPU setup: there are two options.
 
-## Local machine: if you have macbook or nvidia GPU
+## Local machine: if you have macbook
 
 1. Install [Julia](https://julialang.org/downloads/).
 2. Clone the repo and enter the KernelAbstractions project:
@@ -34,7 +18,7 @@ Steps for the parallel-programming notebooks with GPU setup: there are two optio
    julia --project=. open_notebook.jl
    ```
 
-4. In Jupyter, pick kernel **GPU Julia** and open a notebook. In each notebook, set `DEV` (`:NVIDIA`, `:AMD`, `:Metal`, or `:CPU`) to match your hardware.
+4. In Jupyter, pick kernel **GPU Julia** and open a notebook. In each notebook, set `DEV` in the **second cell** (`:CUDA` (NVIDIA), `:AMDGPU`, `:Metal`, or `:CPU`) before running `Pkg.add`, to match your hardware.
 
 
 
@@ -68,7 +52,7 @@ cat job.<job-id>.out
 
 4. Finally, follow the instructions in the job file and open the jupyter terminal from your terminal:
 
-5. In Jupyter, pick kernel **GPU Julia** and open a notebook. In each notebook, set `DEV` (`:NVIDIA`, `:AMD`, `:Metal`, or `:CPU`) to match your hardware.
+5. In Jupyter, pick kernel **GPU Julia** and open a notebook. In each notebook, set `DEV` in the **second cell** (`:CUDA` (NVIDIA), `:AMDGPU`, `:Metal`, or `:CPU`) before running `Pkg.add`, to match your hardware.
 
 6. When do done, do not forget to close your allocation!
 
